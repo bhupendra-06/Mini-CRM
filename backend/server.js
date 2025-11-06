@@ -5,7 +5,11 @@ require('dotenv').config();
 
 const app = express();
 
+// Allow all origins
 app.use(cors());
+
+// OR you can be explicit like this:
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
 const authRoutes = require('./routes/auth');
