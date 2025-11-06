@@ -7,6 +7,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -15,7 +16,7 @@ export default function Login() {
 
     try {
       const res = await fetch(
-        "https://mini-crm-9gdb.onrender.com/api/auth/login",
+        `${API_BASE}/api/auth/login`,
         {
           method: "POST",
           headers: {

@@ -29,4 +29,26 @@ router.get('/', verifyToken, verifyRole(['admin', 'staff']), async (req, res) =>
   res.json(clients);
 });
 
+// Update client
+router.put('/:id', verifyToken, verifyRole(['admin', 'staff']), async (req, res) => {
+  try {
+    const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedClient) return res.status(404).json('Client not found');
+    res.json(updatedClient);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+// Delete client
+router.delete('/:id', verifyToken, verifyRole(['admin']), async (req, res) => {
+  try {
+    const deletedClient = await Client.findByIdAndDelete(req.params.id);
+    if (!deletedClient) return res.status(404).json('Client not found');
+    res.json({ message: 'Client deleted successfully' });
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
 module.exports = router;

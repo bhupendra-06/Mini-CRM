@@ -13,6 +13,21 @@ router.post('/', verifyToken, verifyRole(['admin']), async (req, res) => {
   }
 });
 
+// Get all projects (Admin/Staff) or by client (Client)
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    let projects;
+    if (req.user.role === 'client') {
+      projects = await Project.find({ client: req.user.id }).populate('client staff');
+    } else {
+      projects = await Project.find().populate('client staff');
+    }
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
 // Update Project status
 router.put('/:id', verifyToken, verifyRole(['admin', 'staff']), async (req, res) => {
   try {
@@ -23,15 +38,23 @@ router.put('/:id', verifyToken, verifyRole(['admin', 'staff']), async (req, res)
   }
 });
 
-// Get all projects (Admin/Staff) or by client (Client)
-router.get('/', verifyToken, async (req, res) => {
+// Delete project
+router.delete("/:id", verifyToken, verifyRole(["admin"]), async (req, res) => {
+  await Project.findByIdAndDelete(req.params.id);
+  res.json({ message: "Project deleted" });
+});
+
+
+// Filter projects by status, client, staff
+router.get('/filter', verifyToken, async (req, res) => {
   try {
-    let projects;
-    if (req.user.role === 'client') {
-      projects = await Project.find({ client: req.user.id }).populate('client staff');
-    } else {
-      projects = await Project.find().populate('client staff');
-    }
+    const { status, client, staff } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (client) filter.client = client;
+    if (staff) filter.staff = staff;
+
+    const projects = await Project.find(filter).populate('client staff');
     res.json(projects);
   } catch (err) {
     res.status(500).json(err);

@@ -4,21 +4,19 @@ export default function AdminLeads() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchLeads = async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(
-          "https://mini-crm-9gdb.onrender.com/api/leads",
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_BASE}/api/leads`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) throw new Error("Failed to fetch leads");
 
@@ -35,6 +33,28 @@ export default function AdminLeads() {
     fetchLeads();
   }, []);
 
+  // Shimmer row for table
+  const ShimmerRow = () => (
+    <tr className="border-b animate-pulse">
+      <td className="py-2 px-3 sm:py-3 sm:px-4">
+        <div className="h-4 bg-gray-300 rounded w-24"></div>
+      </td>
+      <td className="py-2 px-3 sm:py-3 sm:px-4">
+        <div className="h-4 bg-gray-300 rounded w-32"></div>
+      </td>
+      <td className="py-2 px-3 sm:py-3 sm:px-4">
+        <div className="h-4 bg-gray-300 rounded w-24"></div>
+      </td>
+      <td className="py-2 px-3 sm:py-3 sm:px-4">
+        <div className="h-4 bg-gray-300 rounded w-16"></div>
+      </td>
+      <td className="py-2 px-3 sm:py-3 sm:px-4 flex gap-2">
+        <div className="h-6 bg-gray-300 rounded w-12"></div>
+        <div className="h-6 bg-gray-300 rounded w-12"></div>
+      </td>
+    </tr>
+  );
+
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <h1 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-6">
@@ -42,7 +62,36 @@ export default function AdminLeads() {
       </h1>
 
       {loading ? (
-        <p className="text-gray-500 text-base sm:text-lg">Loading leads...</p>
+        <div className="bg-white sm:rounded-xl shadow-md overflow-x-auto">
+          <table className="min-w-full text-left text-gray-700 bg-white rounded-xl shadow-md">
+            <thead className="bg-blue-100">
+              <tr>
+                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
+                  Name
+                </th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
+                  Email
+                </th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
+                  Phone
+                </th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
+                  Status
+                </th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array(6)
+                .fill(0)
+                .map((_, i) => (
+                  <ShimmerRow key={i} />
+                ))}
+            </tbody>
+          </table>
+        </div>
       ) : error ? (
         <p className="text-red-500 text-base sm:text-lg">{error}</p>
       ) : leads.length === 0 ? (
