@@ -24,6 +24,9 @@ app.use('/api/projects', projectRoutes);
 const overviewRoutes = require('./routes/overview');
 app.use('/api/overview', overviewRoutes);
 
+const staffRoutes = require('./routes/staff');
+app.use('/api/staff', staffRoutes);
+
 const statsRoutes = require('./routes/stats');
 app.use('/api/stats', statsRoutes);
 
