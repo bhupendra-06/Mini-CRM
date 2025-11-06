@@ -3,8 +3,9 @@ const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { verifyToken, verifyRole } = require('../middleware/auth');
 
-router.post('/register', async (req, res) => {
+router.post('/register', verifyToken, verifyRole(['admin', 'staff']), async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);

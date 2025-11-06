@@ -4,6 +4,7 @@ const clientSchema = new mongoose.Schema({
   name: String,
   email: String,
   contact: String,
+  password: String,
   projects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],
   assignedStaff: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 });
