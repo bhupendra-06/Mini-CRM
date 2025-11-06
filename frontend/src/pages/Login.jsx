@@ -5,23 +5,30 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // Start loading
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
+      const res = await fetch(
+        "https://mini-crm-9gdb.onrender.com/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
       const data = await res.json();
 
       if (!res.ok) {
         setError(data.message || "Invalid credentials");
+        setLoading(false); // Stop loading on error
         return;
       }
 
@@ -30,12 +37,15 @@ export default function Login() {
 
       console.log("Login successful:", data);
 
+      // Redirecting based on role
       if (data.role === "admin") navigate("/admin/dashboard");
       else if (data.role === "staff") navigate("/staff/dashboard");
       else if (data.role === "client") navigate("/client/dashboard");
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Try again later.");
+    } finally {
+      setLoading(false); // ✅ stop loading after everything
     }
   };
 
@@ -95,14 +105,45 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+              disabled={loading} // ✅ disable when loading
+              className={`w-full font-semibold py-3 rounded-lg transition ${
+                loading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
             >
-              Sign In
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                  </svg>
+                  Logging in...
+                </div>
+              ) : (
+                "Sign In"
+              )}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            Login to see your projects
+            Login to manage your CRM data.
           </p>
         </div>
       </div>
