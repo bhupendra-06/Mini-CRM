@@ -5,9 +5,6 @@ require('dotenv').config();
 
 const app = express();
 
-// Allow all origins
-app.use(cors());
-
 // OR you can be explicit like this:
 app.use(cors({ origin: '*' }));
 app.use(express.json());
@@ -27,6 +24,8 @@ app.use('/api/projects', projectRoutes);
 const overviewRoutes = require('./routes/overview');
 app.use('/api/overview', overviewRoutes);
 
+const statsRoutes = require('./routes/stats');
+app.use('/api/stats', statsRoutes);
 
 app.get('/', (req, res) => {
   res.send('Mini CRM Backend Running...');
