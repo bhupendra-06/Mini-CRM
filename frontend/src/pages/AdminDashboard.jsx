@@ -1,75 +1,67 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Outlet, Link } from "react-router-dom";
+import { FiMenu, FiX } from "react-icons/fi";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    leads: 0,
-    clients: 0,
-    projects: 0,
-    staff: 0,
-  });
+  const [active, setActive] = useState("dashboard");
 
-  // Temporary mock data (replace later with API call)
-  useEffect(() => {
-    // Example fetch from backend later:
-    // fetch("http://localhost:5000/api/admin/stats", { headers: { Authorization: `Bearer ${token}` } })
-    //   .then(res => res.json())
-    //   .then(data => setStats(data));
-
-    setStats({
-      leads: 24,
-      clients: 12,
-      projects: 8,
-      staff: 5,
-    });
-  }, []);
+  const stats = {
+    leads: 24,
+    clients: 12,
+    projects: 8,
+    staff: 5,
+  };
 
   const logout = () => {
     localStorage.clear();
     window.location.href = "/login";
   };
 
+  const menuItems = [
+    { path: "overview", label: "overview" },
+    { path: "leads", label: "Leads" },
+    { path: "clients", label: "Clients" },
+    { path: "projects", label: "Projects" },
+    { path: "staff", label: "Staff" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      {/* Navbar */}
-      <div className="flex justify-between items-center mb-10">
-        <h1 className="text-3xl font-bold text-blue-700">Admin Dashboard</h1>
-        <button
-          onClick={logout}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
-        >
-          Logout
-        </button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white shadow-md p-6 rounded-xl border-t-4 border-blue-500">
-          <h2 className="text-gray-500 text-sm">Total Leads</h2>
-          <p className="text-3xl font-semibold text-gray-800">{stats.leads}</p>
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-64 max-h-screen bg-[#1E293B] text-white hidden md:flex flex-col">
+        <div className="p-6 text-center border-b border-gray-700">
+          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
         </div>
+        <nav className="flex-1 p-4">
+          {menuItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="block p-3 rounded-md cursor-pointer hover:bg-blue-600 mb-2"
+              onClick={() => setSidebarOpen(false)} // close on mobile
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
 
-        <div className="bg-white shadow-md p-6 rounded-xl border-t-4 border-green-500">
-          <h2 className="text-gray-500 text-sm">Total Clients</h2>
-          <p className="text-3xl font-semibold text-gray-800">{stats.clients}</p>
-        </div>
-
-        <div className="bg-white shadow-md p-6 rounded-xl border-t-4 border-indigo-500">
-          <h2 className="text-gray-500 text-sm">Total Projects</h2>
-          <p className="text-3xl font-semibold text-gray-800">{stats.projects}</p>
-        </div>
-
-        <div className="bg-white shadow-md p-6 rounded-xl border-t-4 border-yellow-500">
-          <h2 className="text-gray-500 text-sm">Total Staff</h2>
-          <p className="text-3xl font-semibold text-gray-800">{stats.staff}</p>
+        <div className="p-4 border-t border-gray-700">
+          <button
+            onClick={logout}
+            className="w-full px-4 py-2 bg-red-500 rounded-md hover:bg-red-600 transition"
+          >
+            Logout
+          </button>
         </div>
       </div>
 
-      {/* Placeholder for future charts or tables */}
-      <div className="mt-10 bg-white shadow-md rounded-xl p-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">
-          Recent Activity (Coming Soon)
-        </h2>
-        <p className="text-gray-500">This section will show recent CRM updates.</p>
+      {/* Content */}
+      <div className="flex-1 h-screen overflow-y-auto">
+        {active === "dashboard" && (
+          <div className="bg-white shadow-md rounded-xl p-1">
+            <Outlet />
+          </div>
+        )}
       </div>
     </div>
   );
