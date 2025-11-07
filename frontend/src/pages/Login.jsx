@@ -33,15 +33,18 @@ export default function Login() {
         return;
       }
 
+      //Save all user data to localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
+      localStorage.setItem("name", data.name);
+      localStorage.setItem("email", data.email);
+
 
       console.log("Login successful:", data);
 
       // Redirecting based on role
-      if (data.role === "admin") navigate("/admin/dashboard");
-      else if (data.role === "staff") navigate("/staff/dashboard");
-      else if (data.role === "client") navigate("/client/dashboard");
+      navigate("/dashboard");
+
     } catch (err) {
       console.error(err);
       setError("Something went wrong. Try again later.");

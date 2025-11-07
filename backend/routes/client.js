@@ -5,7 +5,7 @@ const Lead = require('../models/Lead');
 const { verifyToken, verifyRole } = require('../middleware/auth');
 
 // Convert Lead → Client
-router.post('/convert/:id', verifyToken, verifyRole(['admin', 'staff']), async (req, res) => {
+router.post('/convert/:id', verifyToken, verifyRole(['admin']), async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
     if (!lead) return res.status(404).json('Lead not found');
@@ -24,13 +24,13 @@ router.post('/convert/:id', verifyToken, verifyRole(['admin', 'staff']), async (
 });
 
 // Get all clients
-router.get('/', verifyToken, verifyRole(['admin', 'staff']), async (req, res) => {
+router.get('/', verifyToken, verifyRole(['admin']), async (req, res) => {
   const clients = await Client.find().populate('projects');
   res.json(clients);
 });
 
 // Update client
-router.put('/:id', verifyToken, verifyRole(['admin', 'staff']), async (req, res) => {
+router.put('/:id', verifyToken, verifyRole(['admin']), async (req, res) => {
   try {
     const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updatedClient) return res.status(404).json('Client not found');
