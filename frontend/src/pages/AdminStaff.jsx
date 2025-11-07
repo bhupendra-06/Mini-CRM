@@ -12,7 +12,7 @@ useEffect(() => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/users/staff`, {
+      const res = await fetch(`${API_BASE}/api/users/staff`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

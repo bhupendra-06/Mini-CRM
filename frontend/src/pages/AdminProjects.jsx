@@ -54,7 +54,7 @@ export default function AdminProjects() {
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl sm:text-3xl font-bold text-indigo-700 mb-6">
+      <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-700 mb-6">
         Projects List
       </h1>
 

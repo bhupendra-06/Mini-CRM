@@ -65,7 +65,9 @@ export default function AdminLeads() {
 
   // ✅ Delete Lead
   const deleteLead = async (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this lead?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this lead?"
+    );
     if (!confirmDelete) return;
 
     try {
@@ -146,7 +148,7 @@ export default function AdminLeads() {
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
       <Toaster />
-      <h1 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-6">
+      <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700 mb-6">
         Leads List
       </h1>
 
@@ -177,14 +179,14 @@ export default function AdminLeads() {
         <p className="text-gray-500 text-base sm:text-lg">No leads found.</p>
       ) : (
         <div className="bg-white sm:rounded-xl shadow-md overflow-x-auto">
-          <table className="min-w-full text-left text-gray-700 bg-white rounded-xl shadow-md">
+          <table className="min-w-full text-left text-gray-700">
             <thead className="bg-blue-100">
               <tr>
-                <th className="py-2 px-3 sm:py-3 sm:px-4">Name</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4 min-w-36">Name</th>
                 <th className="py-2 px-3 sm:py-3 sm:px-4">Email</th>
                 <th className="py-2 px-3 sm:py-3 sm:px-4">Phone</th>
                 <th className="py-2 px-3 sm:py-3 sm:px-4">Status</th>
-                <th className="py-2 px-3 sm:py-3 sm:px-4">Actions</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4 min-w-52 md:min-w-72">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -196,30 +198,48 @@ export default function AdminLeads() {
                   <td className="py-2 px-3 sm:py-3 sm:px-4">{lead.name}</td>
                   <td className="py-2 px-3 sm:py-3 sm:px-4">{lead.email}</td>
                   <td className="py-2 px-3 sm:py-3 sm:px-4">{lead.contact}</td>
-                  <td className="py-2 px-3 sm:py-3 sm:px-4 capitalize">
-                    {lead.status}
+                  <td className="py-2 px-3 sm:py-3 sm:px-4">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${
+                        lead.status === "new"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : lead.status === "converted"
+                          ? "bg-green-100 text-green-800"
+                          : lead.status === "pending"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {lead.status}
+                    </span>
                   </td>
                   <td className="py-2 px-3 sm:py-3 sm:px-4 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => convertToClient(lead.email)}
+                      disabled={convertingId === lead._id}
+                      className={`bg-blue-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-blue-600 transition ${
+                        convertingId === lead._id
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
+                    >
+                      {convertingId === lead._id ? "Converting..." : "Convert"}
+                    </button>
+
                     <button
                       onClick={() => setEditingLead(lead)}
                       className="bg-green-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-600 transition"
                     >
                       Edit
                     </button>
-                    <button
-                      onClick={() => convertToClient(lead._id)}
-                      disabled={convertingId === lead._id}
-                      className={`bg-blue-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-blue-600 transition ${
-                        convertingId === lead._id ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {convertingId === lead._id ? "Converting..." : "Convert"}
-                    </button>
+
                     <button
                       onClick={() => deleteLead(lead._id)}
                       disabled={deletingId === lead._id}
                       className={`bg-red-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-red-600 transition ${
-                        deletingId === lead._id ? "opacity-50 cursor-not-allowed" : ""
+                        deletingId === lead._id
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
                       }`}
                     >
                       {deletingId === lead._id ? "Deleting..." : "Delete"}

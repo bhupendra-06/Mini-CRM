@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link } from "react-router-dom";
+import { FiMenu, FiX } from "react-icons/fi";
 
 export default function AdminDashboard() {
   const [role, setRole] = useState("");
@@ -45,8 +46,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="w-64 max-h-screen bg-[#1E293B] text-white hidden md:flex flex-col">
+      {/* Sidebar for desktop & mobile */}
+      <div
+        className={`fixed md:static top-0 left-0 min-h-screen w-64 bg-[#1E293B] text-white transform transition-transform duration-300 z-50 
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >
         {/* Profile Section */}
         <div className="p-6 border-b border-gray-700 text-center">
           <div className="w-16 h-16 mx-auto rounded-full bg-blue-500 flex items-center justify-center text-xl font-bold uppercase">
@@ -58,7 +62,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4 overflow-y-auto">
           {menuItems.map((item) => (
             <Link
               key={item.path}
@@ -82,10 +86,35 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 h-screen overflow-y-auto">
-        <div className="bg-white shadow-md rounded-xl p-1">
-          <Outlet />
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 h-screen overflow-y-auto relative">
+        {/* Top Bar for mobile */}
+        <div className="md:hidden flex items-center justify-between bg-white p-4 shadow">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-gray-700 text-2xl"
+          >
+            {sidebarOpen ? <FiX /> : <FiMenu />}
+          </button>
+          <h1 className="text-lg font-semibold text-gray-700">Dashboard</h1>
+          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold uppercase">
+            {name ? name[0] : "U"}
+          </div>
+        </div>
+
+        {/* Content Outlet */}
+        <div className="p-4 md:p-6">
+          <div className="bg-white shadow-md rounded-xl p-4 md:p-6">
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>

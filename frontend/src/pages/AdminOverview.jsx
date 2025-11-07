@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AdminOverview() {
   const [stats, setStats] = useState({
@@ -8,6 +9,7 @@ export default function AdminOverview() {
     staff: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [newUser, setNewUser] = useState({
     name: "",
@@ -16,6 +18,7 @@ export default function AdminOverview() {
     password: "",
     role: "lead",
   });
+
   const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -27,6 +30,7 @@ export default function AdminOverview() {
         setStats(data);
       } catch (error) {
         console.error("Error fetching stats:", error);
+        toast.error("Failed to fetch dashboard stats");
       } finally {
         setLoading(false);
       }
@@ -40,10 +44,9 @@ export default function AdminOverview() {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-
+    setAdding(true);
     try {
       const token = localStorage.getItem("token");
-
       const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: {
@@ -55,12 +58,20 @@ export default function AdminOverview() {
 
       if (!response.ok) throw new Error("Failed to add user");
 
-      alert("User added successfully!");
+      toast.success("User added successfully!");
       setShowModal(false);
-      setNewUser({ name: "", email: "", contact: "", password: "", role: "lead" });
+      setNewUser({
+        name: "",
+        email: "",
+        contact: "",
+        password: "",
+        role: "lead",
+      });
     } catch (error) {
       console.error(error);
-      alert("Error adding user.");
+      toast.error("Error adding user.");
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -72,11 +83,13 @@ export default function AdminOverview() {
   );
 
   return (
-    <div className="flex-1 p-8 min-h-screen">
-      <h2 className="text-2xl font-bold mb-6 text-gray-700">Dashboard</h2>
+    <div className="flex-1 p-4 sm:p-8 min-h-screen">
+      <Toaster position="top-right" />
+
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 text-gray-700">Dashboard</h2>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {loading ? (
           Array(4)
             .fill(0)
@@ -122,7 +135,15 @@ export default function AdminOverview() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl"
+            >
+              &times;
+            </button>
+
             <h3 className="text-xl font-bold mb-4 text-gray-700">
               Add New User
             </h3>
@@ -152,7 +173,9 @@ export default function AdminOverview() {
               </div>
 
               <div>
-                <label className="block text-gray-600 text-sm mb-1">Contact</label>
+                <label className="block text-gray-600 text-sm mb-1">
+                  Contact
+                </label>
                 <input
                   type="text"
                   name="contact"
@@ -164,7 +187,9 @@ export default function AdminOverview() {
               </div>
 
               <div>
-                <label className="block text-gray-600 text-sm mb-1">Password</label>
+                <label className="block text-gray-600 text-sm mb-1">
+                  Password
+                </label>
                 <input
                   type="password"
                   name="password"
@@ -198,9 +223,14 @@ export default function AdminOverview() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+                  disabled={adding}
+                  className={`px-4 py-2 rounded text-white ${
+                    adding
+                      ? "bg-blue-400 cursor-not-allowed"
+                      : "bg-blue-500 hover:bg-blue-600"
+                  }`}
                 >
-                  Add User
+                  {adding ? "Adding..." : "Add User"}
                 </button>
               </div>
             </form>
