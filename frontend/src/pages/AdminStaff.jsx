@@ -1,8 +1,49 @@
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast"; // optional for notifications
+
 export default function AdminStaff() {
-  const users = [
-    { id: 1, name: "Ravi Kumar", role: "Staff", email: "ravi@crm.com" },
-    { id: 2, name: "Neha Gupta", role: "Staff", email: "neha@crm.com" },
-  ];
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const API_BASE = import.meta.env.VITE_API_URL; // your backend URL
+
+  useEffect(() => {
+    const fetchStaff = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/users/staff`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch staff users");
+        }
+
+        const data = await res.json();
+        console.log("Fetched staff users:", data);
+        setUsers(data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Error fetching staff users");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaff();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-8 bg-gray-50 min-h-screen flex justify-center items-center">
+        <p className="text-gray-500 text-lg">Loading staff...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -19,7 +60,7 @@ export default function AdminStaff() {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b hover:bg-gray-50">
+              <tr key={u._id} className="border-b hover:bg-gray-50">
                 <td className="py-3 px-4">{u.name}</td>
                 <td className="py-3 px-4">{u.role}</td>
                 <td className="py-3 px-4">{u.email}</td>
@@ -33,6 +74,13 @@ export default function AdminStaff() {
                 </td>
               </tr>
             ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan="4" className="text-center py-4 text-gray-500">
+                  No staff members found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

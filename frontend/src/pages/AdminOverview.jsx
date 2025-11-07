@@ -8,15 +8,20 @@ export default function AdminOverview() {
     staff: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "client",
+  });
   const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/stats`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch stats");
-        }
+        if (!response.ok) throw new Error("Failed to fetch stats");
         const data = await response.json();
         setStats(data);
       } catch (error) {
@@ -25,15 +30,36 @@ export default function AdminOverview() {
         setLoading(false);
       }
     };
-
     fetchStats();
   }, []);
 
-  // Recent activity (still static for now)
-  const [recentActivity] = useState([
-    { id: 1, name: "John Doe", type: "Lead", date: "05-Nov-2025", status: "New", color: "green" },
-    { id: 2, name: "Acme Corp", type: "Client", date: "04-Nov-2025", status: "Active", color: "blue" },
-  ]);
+  const handleInputChange = (e) => {
+    setNewUser({ ...newUser, [e.target.name]: e.target.value });
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+
+    try {
+      const token = localStorage.getItem("token"); // get token from localStorage
+
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newUser),
+      });
+      if (!response.ok) throw new Error("Failed to add user");
+      alert("User added successfully!");
+      setShowModal(false);
+      setNewUser({ name: "", email: "", password: "", role: "client" });
+    } catch (error) {
+      console.error(error);
+      alert("Error adding user.");
+    }
+  };
 
   // Shimmer for stat cards
   const ShimmerCard = () => (
@@ -43,24 +69,6 @@ export default function AdminOverview() {
     </div>
   );
 
-  // Shimmer for table rows
-  const ShimmerRow = () => (
-    <tr className="border-b animate-pulse">
-      <td className="py-2">
-        <div className="h-4 bg-gray-300 rounded w-24"></div>
-      </td>
-      <td className="py-2">
-        <div className="h-4 bg-gray-300 rounded w-20"></div>
-      </td>
-      <td className="py-2">
-        <div className="h-4 bg-gray-300 rounded w-16"></div>
-      </td>
-      <td className="py-2">
-        <div className="h-4 bg-gray-300 rounded w-12"></div>
-      </td>
-    </tr>
-  );
-
   return (
     <div className="flex-1 p-8 min-h-screen">
       <h2 className="text-2xl font-bold mb-6 text-gray-700">Dashboard</h2>
@@ -68,65 +76,123 @@ export default function AdminOverview() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         {loading ? (
-          Array(4).fill(0).map((_, i) => <ShimmerCard key={i} />)
+          Array(4)
+            .fill(0)
+            .map((_, i) => <ShimmerCard key={i} />)
         ) : (
           <>
             <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-500">
               <h3 className="text-gray-500 text-sm">Leads</h3>
-              <p className="text-3xl font-semibold text-gray-900">{stats.leads}</p>
+              <p className="text-3xl font-semibold text-gray-900">
+                {stats.leads}
+              </p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-500">
               <h3 className="text-gray-500 text-sm">Clients</h3>
-              <p className="text-3xl font-semibold text-gray-900">{stats.clients}</p>
+              <p className="text-3xl font-semibold text-gray-900">
+                {stats.clients}
+              </p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-indigo-500">
               <h3 className="text-gray-500 text-sm">Projects</h3>
-              <p className="text-3xl font-semibold text-gray-900">{stats.projects}</p>
+              <p className="text-3xl font-semibold text-gray-900">
+                {stats.projects}
+              </p>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-yellow-500">
               <h3 className="text-gray-500 text-sm">Staff</h3>
-              <p className="text-3xl font-semibold text-gray-900">{stats.staff}</p>
+              <p className="text-3xl font-semibold text-gray-900">
+                {stats.staff}
+              </p>
             </div>
           </>
         )}
       </div>
 
-      {/* Recent Activity Table */}
-      <div className="bg-white shadow-md rounded-xl p-6 overflow-x-auto">
-        <h3 className="text-gray-700 font-semibold mb-4">Recent Activity</h3>
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="py-2">Name</th>
-              <th className="py-2">Type</th>
-              <th className="py-2">Date</th>
-              <th className="py-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading
-              ? Array(4).fill(0).map((_, i) => <ShimmerRow key={i} />)
-              : recentActivity.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-100">
-                    <td className="py-2">{item.name}</td>
-                    <td className="py-2">{item.type}</td>
-                    <td className="py-2">{item.date}</td>
-                    <td
-                      className={`py-2 font-semibold ${
-                        item.color === "green"
-                          ? "text-green-500"
-                          : item.color === "blue"
-                          ? "text-blue-500"
-                          : "text-gray-700"
-                      }`}
-                    >
-                      {item.status}
-                    </td>
-                  </tr>
-                ))}
-          </tbody>
-        </table>
+      {/* Add New User Card */}
+      <div
+        onClick={() => setShowModal(true)}
+        className="cursor-pointer bg-white p-6 rounded-xl shadow-md border-2 border-dashed border-gray-300 hover:bg-gray-50 w-full max-w-sm text-center"
+      >
+        <p className="text-gray-500 font-semibold">+ Add New User</p>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4 text-gray-700">
+              Add New User
+            </h3>
+            <form onSubmit={handleAddUser} className="space-y-4">
+              <div>
+                <label className="block text-gray-600 text-sm mb-1">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newUser.name}
+                  onChange={handleInputChange}
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-600 text-sm mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={newUser.email}
+                  onChange={handleInputChange}
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-600 text-sm mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={newUser.password}
+                  onChange={handleInputChange}
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-600 text-sm mb-1">Role</label>
+                <select
+                  name="role"
+                  value={newUser.role}
+                  onChange={handleInputChange}
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="client">Client</option>
+                  <option value="staff">Staff</option>
+                </select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+                >
+                  Add User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

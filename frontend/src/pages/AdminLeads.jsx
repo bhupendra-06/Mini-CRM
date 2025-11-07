@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [convertingId, setConvertingId] = useState(null); // loading state for convert button
   const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -33,7 +35,30 @@ export default function AdminLeads() {
     fetchLeads();
   }, []);
 
-  // Shimmer row for table
+  const convertToClient = async (id) => {
+    try {
+      setConvertingId(id);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/api/clients/convert/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Conversion failed");
+
+      setLeads((prevLeads) => prevLeads.filter((lead) => lead._id !== id));
+      toast.success("Lead converted to client successfully!");
+    } catch (err) {
+      console.error("Error converting lead:", err);
+      toast.error("Failed to convert lead.");
+    } finally {
+      setConvertingId(null);
+    }
+  };
+
   const ShimmerRow = () => (
     <tr className="border-b animate-pulse">
       <td className="py-2 px-3 sm:py-3 sm:px-4">
@@ -57,6 +82,7 @@ export default function AdminLeads() {
 
   return (
     <div className="p-4 sm:p-8 bg-gray-50 min-h-screen">
+      <Toaster />
       <h1 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-6">
         Leads List
       </h1>
@@ -139,6 +165,15 @@ export default function AdminLeads() {
                   <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base flex flex-wrap gap-2">
                     <button className="bg-green-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-600 transition">
                       Edit
+                    </button>
+                    <button
+                      className={`bg-blue-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-blue-600 transition ${
+                        convertingId === lead._id ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      onClick={() => convertToClient(lead._id)}
+                      disabled={convertingId === lead._id}
+                    >
+                      {convertingId === lead._id ? "Converting..." : "Convert"}
                     </button>
                     <button className="bg-red-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-red-600 transition">
                       Delete
