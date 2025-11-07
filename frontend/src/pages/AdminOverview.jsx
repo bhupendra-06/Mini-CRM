@@ -12,8 +12,9 @@ export default function AdminOverview() {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
+    contact: "",
     password: "",
-    role: "client",
+    role: "lead",
   });
   const API_BASE = import.meta.env.VITE_API_URL;
 
@@ -41,7 +42,7 @@ export default function AdminOverview() {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("token"); // get token from localStorage
+      const token = localStorage.getItem("token");
 
       const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
@@ -51,17 +52,18 @@ export default function AdminOverview() {
         },
         body: JSON.stringify(newUser),
       });
+
       if (!response.ok) throw new Error("Failed to add user");
+
       alert("User added successfully!");
       setShowModal(false);
-      setNewUser({ name: "", email: "", password: "", role: "client" });
+      setNewUser({ name: "", email: "", contact: "", password: "", role: "lead" });
     } catch (error) {
       console.error(error);
       alert("Error adding user.");
     }
   };
 
-  // Shimmer for stat cards
   const ShimmerCard = () => (
     <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-gray-300 animate-pulse">
       <div className="h-5 bg-gray-300 rounded w-20 mb-2"></div>
@@ -136,10 +138,9 @@ export default function AdminOverview() {
                   required
                 />
               </div>
+
               <div>
-                <label className="block text-gray-600 text-sm mb-1">
-                  Email
-                </label>
+                <label className="block text-gray-600 text-sm mb-1">Email</label>
                 <input
                   type="email"
                   name="email"
@@ -149,10 +150,21 @@ export default function AdminOverview() {
                   required
                 />
               </div>
+
               <div>
-                <label className="block text-gray-600 text-sm mb-1">
-                  Password
-                </label>
+                <label className="block text-gray-600 text-sm mb-1">Contact</label>
+                <input
+                  type="text"
+                  name="contact"
+                  value={newUser.contact}
+                  onChange={handleInputChange}
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-600 text-sm mb-1">Password</label>
                 <input
                   type="password"
                   name="password"
@@ -162,6 +174,7 @@ export default function AdminOverview() {
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-gray-600 text-sm mb-1">Role</label>
                 <select
@@ -170,10 +183,11 @@ export default function AdminOverview() {
                   onChange={handleInputChange}
                   className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 >
-                  <option value="client">Client</option>
+                  <option value="lead">Lead</option>
                   <option value="staff">Staff</option>
                 </select>
               </div>
+
               <div className="flex justify-end space-x-2">
                 <button
                   type="button"
