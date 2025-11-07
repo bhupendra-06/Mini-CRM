@@ -7,35 +7,35 @@ export default function AdminStaff() {
 
   const API_BASE = import.meta.env.VITE_API_URL; // your backend URL
 
-  useEffect(() => {
-    const fetchStaff = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/users/staff`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+useEffect(() => {
+  const fetchStaff = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/users/staff`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch staff users");
-        }
+      if (!res.ok) throw new Error("Failed to fetch staff users");
 
-        const data = await res.json();
-        console.log("Fetched staff users:", data);
-        setUsers(data);
-      } catch (err) {
-        console.error(err);
-        toast.error("Error fetching staff users");
-      } finally {
-        setLoading(false);
-      }
-    };
+      const data = await res.json();
+      console.log("Fetched staff users:", data);
+      setUsers(data);
+      toast.success("Staff loaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching staff users");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStaff();
-  }, []);
+  fetchStaff();
+}, []);
+
 
   if (loading) {
     return (
