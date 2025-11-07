@@ -9,4 +9,13 @@ const getStaffUsers = async (req, res) => {
   }
 };
 
-module.exports = { getStaffUsers };
+const getClientUsers = async (req, res) => {
+  try {
+    const clientUsers = await User.find({ role: 'client' }).select('-password');
+    res.json(clientUsers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { getStaffUsers, getClientUsers };

@@ -1,54 +1,100 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import ProjectForm from "./ProjectForm";
 
-export default function AdminProjects() {
+export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const API_BASE = import.meta.env.VITE_API_URL;
+
+  const userRole = localStorage.getItem("role"); // 'admin', 'staff', 'client'
+  
+  // Helper to decode JWT
+  function parseJwt(token) {
+    try {
+      return JSON.parse(atob(token.split(".")[1]));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // In your component
+  const token = localStorage.getItem("token");
+  const decoded = parseJwt(token);  
+  const userId = decoded?.id;
+  console.log(userId);
 
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/api/projects`, {
+        const res = await fetch(`${API_BASE}/api/projects`, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-
-        if (!response.ok) throw new Error("Failed to fetch projects");
-
-        const data = await response.json();
+        if (!res.ok) throw new Error("Failed to fetch projects");
+        const data = await res.json();
         setProjects(data);
       } catch (err) {
-        console.error("Error fetching projects:", err);
+        console.error(err);
         setError("Unable to fetch projects");
       } finally {
         setLoading(false);
       }
     };
-
     fetchProjects();
   }, []);
 
-  // Shimmer row component
+  const handleDelete = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/projects/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to delete project");
+      setProjects(projects.filter((p) => p._id !== id));
+      toast.success("Project deleted");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error deleting project");
+    }
+  };
+
+  const handleProgressUpdate = async (id, progress) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/projects/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ progress }),
+      });
+      if (!res.ok) throw new Error("Failed to update progress");
+      const updated = await res.json();
+      setProjects(projects.map((p) => (p._id === id ? updated : p)));
+      toast.success("Progress updated");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error updating progress");
+    }
+  };
+
   const ShimmerRow = () => (
     <tr className="border-b animate-pulse">
-      <td className="py-2 px-3 sm:py-3 sm:px-4">
-        <div className="h-4 bg-gray-300 rounded w-24 sm:w-32"></div>
-      </td>
-      <td className="py-2 px-3 sm:py-3 sm:px-4">
-        <div className="h-4 bg-gray-300 rounded w-20 sm:w-28"></div>
-      </td>
-      <td className="py-2 px-3 sm:py-3 sm:px-4">
-        <div className="h-4 bg-gray-300 rounded w-16 sm:w-20"></div>
-      </td>
-      <td className="py-2 px-3 sm:py-3 sm:px-4 flex gap-2">
-        <div className="h-6 bg-gray-300 rounded w-12 sm:w-16"></div>
-        <div className="h-6 bg-gray-300 rounded w-12 sm:w-16"></div>
-      </td>
+      {Array(4)
+        .fill(0)
+        .map((_, i) => (
+          <td key={i} className="py-2 px-3 sm:py-3 sm:px-4">
+            <div className="h-4 bg-gray-300 rounded w-24 sm:w-32"></div>
+          </td>
+        ))}
     </tr>
   );
 
@@ -63,18 +109,10 @@ export default function AdminProjects() {
           <table className="min-w-full text-left text-gray-700 bg-white rounded-xl shadow-md">
             <thead className="bg-indigo-100">
               <tr>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Title
-                </th>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Client
-                </th>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Status
-                </th>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Actions
-                </th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Title</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Client</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Status</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -95,49 +133,71 @@ export default function AdminProjects() {
           <table className="min-w-full text-left text-gray-700 bg-white rounded-xl shadow-md">
             <thead className="bg-indigo-100">
               <tr>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Title
-                </th>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Client
-                </th>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Status
-                </th>
-                <th className="py-2 px-3 sm:py-3 sm:px-4 text-left text-sm sm:text-base">
-                  Actions
-                </th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Title</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Client</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Status</th>
+                <th className="py-2 px-3 sm:py-3 sm:px-4">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {projects.map((p) => (
-                <tr
-                  key={p._id}
-                  className="border-b hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base">
-                    {p.title}
-                  </td>
-                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base">
-                    {p.client?.name || "N/A"}
-                  </td>
-                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base capitalize">
-                    {p.status}
-                  </td>
-                  <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base flex flex-wrap gap-2">
-                    <button className="bg-green-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-600 transition">
-                      Edit
-                    </button>
-                    <button className="bg-red-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-red-600 transition">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {projects.map((p) => {
+                // Only show project if admin, or staff assigned to project, or client of project
+                const isStaffAssigned =
+                  p.staff && userRole === "staff" && p.staff._id === userId;
+                const isClientAssigned =
+                  p.client && userRole === "client" && p.client._id === userId;
+                const canEdit = userRole === "admin" || isStaffAssigned;
+
+                if (userRole === "staff" && !isStaffAssigned) return null;
+                if (userRole === "client" && !isClientAssigned) return null;
+
+                return (
+                  <tr
+                    key={p._id}
+                    className="border-b hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base">
+                      {p.title}
+                    </td>
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base">
+                      {p.client?.name || "N/A"}
+                    </td>
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base capitalize">
+                      {p.progress}
+                    </td>
+                    <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base flex flex-wrap gap-2">
+                      {canEdit && (
+                        <>
+                          <button
+                            onClick={() => {
+                              const newProgress = prompt(
+                                "Enter new progress",
+                                p.progress
+                              );
+                              if (newProgress)
+                                handleProgressUpdate(p._id, newProgress);
+                            }}
+                            className="bg-green-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-600 transition"
+                          >
+                            Update
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p._id)}
+                            className="bg-red-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-red-600 transition"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
+      <ProjectForm />
     </div>
   );
 }

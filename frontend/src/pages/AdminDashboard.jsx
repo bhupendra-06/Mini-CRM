@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link } from "react-router-dom";
-import { FiMenu, FiX } from "react-icons/fi";
+import { FiMenu, FiX, FiLogOut } from "react-icons/fi";
 
 export default function AdminDashboard() {
   const [role, setRole] = useState("");
@@ -33,10 +33,10 @@ export default function AdminDashboard() {
           { path: "projects", label: "Projects" },
           { path: "staff", label: "Staff" },
         ];
-      case "staff":
-        return [{ path: "projects", label: "Projects" }];
-      case "client":
-        return [{ path: "projects", label: "Projects" }];
+      // case "staff":
+      //   return [{ path: "projects", label: "Projects" }];
+      // case "client":
+      //   return [{ path: "projects", label: "Projects" }];
       default:
         return [];
     }
@@ -49,7 +49,9 @@ export default function AdminDashboard() {
       {/* Sidebar for desktop & mobile */}
       <div
         className={`fixed md:static top-0 left-0 min-h-screen w-64 bg-[#1E293B] text-white transform transition-transform duration-300 z-50 
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
       >
         {/* Profile Section */}
         <div className="p-6 border-b border-gray-700 text-center">
@@ -57,10 +59,11 @@ export default function AdminDashboard() {
             {name ? name[0] : "U"}
           </div>
           <h2 className="mt-3 text-lg font-semibold">{name || "User"}</h2>
-          <p className="text-sm text-gray-300 truncate">{email || "No Email"}</p>
+          <p className="text-sm text-gray-300 truncate">
+            {email || "No Email"}
+          </p>
           <p className="text-xs text-gray-400 mt-1 capitalize">({role})</p>
         </div>
-
         {/* Menu */}
         <nav className="flex-1 p-4 overflow-y-auto">
           {menuItems.map((item) => (
@@ -74,13 +77,13 @@ export default function AdminDashboard() {
             </Link>
           ))}
         </nav>
-
         {/* Logout */}
         <div className="p-4 border-t border-gray-700">
           <button
             onClick={logout}
-            className="w-full px-4 py-2 bg-red-500 rounded-md hover:bg-red-600 transition"
+            className="w-full px-4 py-2 bg-red-500 rounded-md hover:bg-red-600 transition flex items-center justify-center gap-2"
           >
+            <FiLogOut size={20} />
             Logout
           </button>
         </div>

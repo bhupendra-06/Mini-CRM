@@ -26,8 +26,8 @@ app.use("/api/overview", overviewRoutes);
 const statsRoutes = require("./routes/stats");
 app.use("/api/stats", statsRoutes);
 
-const userRoutes = require("./routes/user");
-app.use("/api/users", userRoutes);
+const userRoutes = require('./routes/user');
+app.use('/api/users', userRoutes);
 
 app.get("/", (req, res) => {
   res.send("Mini CRM Backend Running...");
