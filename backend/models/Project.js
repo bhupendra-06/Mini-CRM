@@ -8,8 +8,8 @@ const projectSchema = new mongoose.Schema({
   staff: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   progress: {
     type: String,
-    enum: ['not started', 'in progress', 'completed'], // allowed values
-    default: 'not started', // must match exactly
+    enum: ['not started', 'in progress', 'completed'], 
+    default: 'not started',
   },
 });
 

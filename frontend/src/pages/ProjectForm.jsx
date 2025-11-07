@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 
-export default function ProjectForm() {
+export default function ProjectForm({ onClose }) {
   const API_BASE = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
 
   const [clients, setClients] = useState([]);
   const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false); // loading state for submit
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     deadline: "",
     client: "",
-    staff: [],
+    staff: "", // single staff
     progress: "not started",
   });
 
@@ -22,8 +24,12 @@ export default function ProjectForm() {
     const fetchUsers = async () => {
       try {
         const [clientsRes, staffRes] = await Promise.all([
-          fetch(`${API_BASE}/api/users/clients`).then((res) => res.json()),
-          fetch(`${API_BASE}/api/users/staff`).then((res) => res.json()),
+          fetch(`${API_BASE}/api/users/clients`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((res) => res.json()),
+          fetch(`${API_BASE}/api/users/staff`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((res) => res.json()),
         ]);
 
         setClients(clientsRes);
@@ -36,32 +42,33 @@ export default function ProjectForm() {
       }
     };
     fetchUsers();
-  }, []);
+  }, [API_BASE, token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleStaffChange = (e) => {
-    const options = e.target.options;
-    const selectedStaff = [];
-    for (let i = 0; i < options.length; i++) {
-      if (options[i].selected) selectedStaff.push(options[i].value);
-    }
-    setFormData((prev) => ({ ...prev, staff: selectedStaff }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true); // start loading
     try {
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        deadline: formData.deadline,
+        clientId: formData.client,
+        staffIds: formData.staff ? [formData.staff] : [],
+        progress: formData.progress,
+      };
+
       const res = await fetch(`${API_BASE}/api/projects`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error("Failed to create project");
@@ -72,12 +79,15 @@ export default function ProjectForm() {
         description: "",
         deadline: "",
         client: "",
-        staff: [],
+        staff: "",
         progress: "not started",
       });
+      if (onClose) onClose(); // close modal if function passed
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to create project");
+    } finally {
+      setSubmitting(false); // stop loading
     }
   };
 
@@ -143,12 +153,13 @@ export default function ProjectForm() {
         <div>
           <label className="block mb-1 text-gray-700">Staff</label>
           <select
-            multiple
             name="staff"
             value={formData.staff}
-            onChange={handleStaffChange}
+            onChange={handleChange}
+            required
             className="w-full p-2 border rounded"
           >
+            <option value="">Select staff</option>
             {staffs.map((staff) => (
               <option key={staff._id} value={staff._id}>
                 {staff.name}
@@ -173,9 +184,12 @@ export default function ProjectForm() {
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={submitting}
+          className={`px-4 py-2 rounded text-white transition ${
+            submitting ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          Create Project
+          {submitting ? "Creating..." : "Create Project"}
         </button>
       </form>
     </div>

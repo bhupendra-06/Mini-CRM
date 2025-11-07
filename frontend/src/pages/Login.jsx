@@ -34,7 +34,7 @@ export default function Login() {
 
       //Save all user data to localStorage
       localStorage.setItem("token", data.token);
-      localStorage.setItem("userId", data._id);
+      localStorage.setItem("userId", data.id);
       localStorage.setItem("role", data.role);
       localStorage.setItem("name", data.name);
       localStorage.setItem("email", data.email);
