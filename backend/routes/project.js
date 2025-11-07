@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { createProject, getProjects, updateProject, deleteProject } = require("../controllers/projectController");
+const { createProject, getProjectsByUserId, getProjects, updateProject, deleteProject } = require("../controllers/projectController");
 const { verifyToken, verifyRole } = require("../middleware/auth");
 
 // Admin can create project
 router.post("/", verifyToken, verifyRole(["admin"]), createProject);
+
+router.get("/user/:userId", verifyToken, getProjectsByUserId);
 
 // Get projects (Admin: all, Staff: assigned, Client: own)
 router.get("/", verifyToken, getProjects);

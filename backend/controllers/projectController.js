@@ -34,6 +34,29 @@ const createProject = async (req, res) => {
   }
 };
 
+
+// GET /api/projects/user/:userId
+const getProjectsByUserId = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate userId
+    if (!userId) return res.status(400).json({ message: "User ID is required" });
+
+    // Find projects where user is either client or staff
+    const projects = await Project.find({
+      $or: [{ client: userId }, { staff: userId }],
+    })
+      .populate("client", "name email role")
+      .populate("staff", "name email role");
+
+    res.json(projects);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch projects", error: err.message });
+  }
+};
+
 // Get projects based on role
 const getProjects = async (req, res) => {
   try {
@@ -99,4 +122,4 @@ const deleteProject = async (req, res) => {
   }
 };
 
-module.exports = { createProject, getProjects, updateProject, deleteProject };
+module.exports = { createProject, getProjectsByUserId, getProjects, updateProject, deleteProject };
