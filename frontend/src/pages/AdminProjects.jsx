@@ -2,35 +2,104 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import ProjectForm from "./ProjectForm";
 
+// Modal component for updating project status
+function UpdateStatusModal({ project, onClose, onUpdate }) {
+  const [progress, setProgress] = useState(project.progress);
+  const [loading, setLoading] = useState(false);
+  const API_BASE = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/api/projects/${project._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ progress }),
+      });
+      if (!res.ok) throw new Error("Failed to update project status");
+      const updated = await res.json();
+      toast.success("Project status updated!");
+      onUpdate(updated);
+      onClose();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Failed to update status");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-sm relative">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        >
+          ✕
+        </button>
+        <h2 className="text-lg font-semibold mb-4">Update Project Status</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block mb-1 text-gray-700">Progress</label>
+            <select
+              value={progress}
+              onChange={(e) => setProgress(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="not started">Not Started</option>
+              <option value="in progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full py-2 rounded text-white ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600"
+            }`}
+          >
+            {loading ? "Updating..." : "Update Status"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Projects() {
   const [projects, setProjects] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [statusModalProject, setStatusModalProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const API_BASE = import.meta.env.VITE_API_URL;
 
   const userRole = localStorage.getItem("role"); // 'admin', 'staff', 'client'
-  
-  // Helper to decode JWT
-  function parseJwt(token) {
-    try {
-      return JSON.parse(atob(token.split(".")[1]));
-    } catch (e) {
-      return null;
-    }
-  }
-
-  // In your component
-  const token = localStorage.getItem("token");
-  const decoded = parseJwt(token);  
-  const userId = decoded?.id;
-  console.log(userId);
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE}/api/projects`, {
+        let url = "";
+
+        if (userRole === "admin") {
+          url = `${API_BASE}/api/projects`;
+        } else {
+          url = `${API_BASE}/api/projects/user/${userId}`;
+        }
+
+        const res = await fetch(url, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -47,10 +116,11 @@ export default function Projects() {
       }
     };
     fetchProjects();
-  }, []);
+  }, [API_BASE, userRole, userId]);
 
   const handleDelete = async (id) => {
     try {
+      setDeletingId(id);
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/projects/${id}`, {
         method: "DELETE",
@@ -62,27 +132,8 @@ export default function Projects() {
     } catch (err) {
       console.error(err);
       toast.error("Error deleting project");
-    }
-  };
-
-  const handleProgressUpdate = async (id, progress) => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE}/api/projects/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ progress }),
-      });
-      if (!res.ok) throw new Error("Failed to update progress");
-      const updated = await res.json();
-      setProjects(projects.map((p) => (p._id === id ? updated : p)));
-      toast.success("Progress updated");
-    } catch (err) {
-      console.error(err);
-      toast.error("Error updating progress");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -103,6 +154,15 @@ export default function Projects() {
       <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-700 mb-6">
         Projects List
       </h1>
+
+      {userRole === "admin" && (
+        <button
+          onClick={() => setShowModal(true)}
+          className="mb-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
+        >
+          Add Project
+        </button>
+      )}
 
       {loading ? (
         <div className="bg-white sm:rounded-xl shadow-md overflow-x-auto">
@@ -141,11 +201,12 @@ export default function Projects() {
             </thead>
             <tbody>
               {projects.map((p) => {
-                // Only show project if admin, or staff assigned to project, or client of project
                 const isStaffAssigned =
-                  p.staff && userRole === "staff" && p.staff._id === userId;
+                  userRole === "staff" &&
+                  Array.isArray(p.staff) &&
+                  p.staff.some((s) => s?._id?.toString() === userId);
                 const isClientAssigned =
-                  p.client && userRole === "client" && p.client._id === userId;
+                  userRole === "client" && p.client?._id?.toString() === userId;
                 const canEdit = userRole === "admin" || isStaffAssigned;
 
                 if (userRole === "staff" && !isStaffAssigned) return null;
@@ -166,29 +227,31 @@ export default function Projects() {
                       {p.progress}
                     </td>
                     <td className="py-2 px-3 sm:py-3 sm:px-4 text-sm sm:text-base flex flex-wrap gap-2">
-                      {canEdit && (
+                      {userRole === "client" ? (
+                        <span className="text-gray-500">
+                          No actions required
+                        </span>
+                      ) : canEdit ? (
                         <>
                           <button
-                            onClick={() => {
-                              const newProgress = prompt(
-                                "Enter new progress",
-                                p.progress
-                              );
-                              if (newProgress)
-                                handleProgressUpdate(p._id, newProgress);
-                            }}
+                            onClick={() => setStatusModalProject(p)}
                             className="bg-green-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-600 transition"
                           >
                             Update
                           </button>
                           <button
                             onClick={() => handleDelete(p._id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded text-xs sm:text-sm hover:bg-red-600 transition"
+                            disabled={deletingId === p._id}
+                            className={`px-3 py-1 rounded text-xs sm:text-sm transition ${
+                              deletingId === p._id
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-red-500 text-white hover:bg-red-600"
+                            }`}
                           >
-                            Delete
+                            {deletingId === p._id ? "Deleting..." : "Delete"}
                           </button>
                         </>
-                      )}
+                      ) : null}
                     </td>
                   </tr>
                 );
@@ -197,7 +260,36 @@ export default function Projects() {
           </table>
         </div>
       )}
-      <ProjectForm />
+
+      {/* Add Project Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+            <ProjectForm onClose={() => setShowModal(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Update Status Modal */}
+      {statusModalProject && (
+        <UpdateStatusModal
+          project={statusModalProject}
+          onClose={() => setStatusModalProject(null)}
+          onUpdate={(updatedProject) =>
+            setProjects((prev) =>
+              prev.map((p) =>
+                p._id === updatedProject._id ? updatedProject : p
+              )
+            )
+          }
+        />
+      )}
     </div>
   );
 }
